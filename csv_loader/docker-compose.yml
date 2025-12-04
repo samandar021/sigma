@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15
+    container_name: csv_loader_db
+    environment:
+      POSTGRES_USER: csv_user
+      POSTGRES_PASSWORD: csv_password
+      POSTGRES_DB: csv_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csv_user -d csv_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: csv_loader_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: csv_db
+      DB_USER: csv_user
+      DB_PASSWORD: csv_password
+      LOG_DIR: logs
+      VIEWS_SQL_PATH: sql/views.sql
+      SPARK_APP_NAME: csv_loader
+      SPARK_MASTER: "local[*]"
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./sql:/app/sql
+    command: >
+      python main.py
+      --users /app/data/users_big.csv
+      --products /app/data/products_big.csv
+      --orders /app/data/orders_big.csv
+      --init-db
+      --create-views
+
+volumes:
+  pgdata:

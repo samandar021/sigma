@@ -1,0 +1,6 @@
+pandas==2.2.2
+SQLAlchemy==2.0.29
+psycopg2-binary==2.9.9
+pyspark==3.5.1
+python-dotenv==1.0.1
+pyarrow==15.0.0
